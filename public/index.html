@@ -1,0 +1,680 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Skyrovix Library Management System | Full Stack</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Lucide Icons CDN -->
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <!-- Custom Stylesheet -->
+  <link rel="stylesheet" href="/css/styles.css">
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              50: '#eef2ff',
+              100: '#e0e7ff',
+              500: '#6366f1',
+              600: '#4f46e5',
+              700: '#4338ca',
+              900: '#312e81',
+            }
+          }
+        }
+      }
+    }
+  </script>
+</head>
+<body class="bg-slate-50 min-h-screen text-slate-800 antialiased flex flex-col md:flex-row">
+
+  <!-- ==================== SIDEBAR ==================== -->
+  <aside class="w-full md:w-64 bg-slate-900 text-slate-300 flex flex-col justify-between flex-shrink-0 z-30 shadow-xl md:min-h-screen">
+    <div>
+      <!-- Brand Logo & Header -->
+      <div class="p-6 border-b border-slate-800/80 flex items-center space-x-3">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-500 to-violet-600 flex items-center justify-center text-white shadow-lg shadow-indigo-500/30">
+          <i data-lucide="library" class="w-6 h-6"></i>
+        </div>
+        <div>
+          <h1 class="text-base font-extrabold text-white tracking-tight">Skyrovix LMS</h1>
+          <span class="text-[11px] font-semibold text-indigo-400 uppercase tracking-widest">Library Suite</span>
+        </div>
+      </div>
+
+      <!-- Navigation Links -->
+      <nav class="p-4 space-y-1.5 font-medium text-sm">
+        <button data-tab="dashboard" class="nav-item active w-full flex items-center justify-between px-3.5 py-3 rounded-xl hover:bg-slate-800/70 hover:text-white transition-all text-slate-400">
+          <div class="flex items-center space-x-3">
+            <i data-lucide="layout-dashboard" class="w-5 h-5"></i>
+            <span>Dashboard</span>
+          </div>
+        </button>
+
+        <button data-tab="books" class="nav-item w-full flex items-center justify-between px-3.5 py-3 rounded-xl hover:bg-slate-800/70 hover:text-white transition-all text-slate-400">
+          <div class="flex items-center space-x-3">
+            <i data-lucide="book-marked" class="w-5 h-5"></i>
+            <span>Book Catalog</span>
+          </div>
+          <span id="badge-total-books" class="text-xs font-bold px-2 py-0.5 rounded-full bg-slate-800 text-slate-400">0</span>
+        </button>
+
+        <button data-tab="members" class="nav-item w-full flex items-center justify-between px-3.5 py-3 rounded-xl hover:bg-slate-800/70 hover:text-white transition-all text-slate-400">
+          <div class="flex items-center space-x-3">
+            <i data-lucide="users" class="w-5 h-5"></i>
+            <span>Members Directory</span>
+          </div>
+          <span id="badge-total-members" class="text-xs font-bold px-2 py-0.5 rounded-full bg-slate-800 text-slate-400">0</span>
+        </button>
+
+        <button data-tab="circulation" class="nav-item w-full flex items-center justify-between px-3.5 py-3 rounded-xl hover:bg-slate-800/70 hover:text-white transition-all text-slate-400">
+          <div class="flex items-center space-x-3">
+            <i data-lucide="repeat" class="w-5 h-5"></i>
+            <span>Circulation & Loans</span>
+          </div>
+          <span id="badge-overdue-loans" class="text-xs font-bold px-2 py-0.5 rounded-full bg-rose-500 text-white animate-pulse hidden">0</span>
+        </button>
+
+        <button data-tab="reports" class="nav-item w-full flex items-center justify-between px-3.5 py-3 rounded-xl hover:bg-slate-800/70 hover:text-white transition-all text-slate-400">
+          <div class="flex items-center space-x-3">
+            <i data-lucide="bar-chart-3" class="w-5 h-5"></i>
+            <span>Analytics & Export</span>
+          </div>
+        </button>
+
+        <button data-tab="settings" class="nav-item w-full flex items-center justify-between px-3.5 py-3 rounded-xl hover:bg-slate-800/70 hover:text-white transition-all text-slate-400">
+          <div class="flex items-center space-x-3">
+            <i data-lucide="settings" class="w-5 h-5"></i>
+            <span>System Settings</span>
+          </div>
+        </button>
+      </nav>
+    </div>
+
+    <!-- Sidebar Bottom Status Widget -->
+    <div class="p-4 border-t border-slate-800">
+      <div class="bg-slate-800/60 rounded-xl p-3 text-xs space-y-1.5 border border-slate-700/50">
+        <div class="flex items-center justify-between text-slate-400">
+          <span class="flex items-center space-x-1.5">
+            <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+            <span>SQLite Active</span>
+          </span>
+          <span class="font-mono text-[10px] text-slate-500">v24 Native</span>
+        </div>
+        <div class="text-[11px] text-slate-400 truncate">data/library.db</div>
+      </div>
+    </div>
+  </aside>
+
+  <!-- ==================== MAIN CONTENT WRAPPER ==================== -->
+  <div class="flex-1 flex flex-col min-w-0 h-screen overflow-y-auto">
+
+    <!-- Top Application Bar -->
+    <header class="bg-white/90 backdrop-blur-md sticky top-0 z-20 border-b border-slate-200/80 px-6 py-3.5 flex items-center justify-between">
+      <!-- Search Input -->
+      <div class="flex-1 max-w-md relative hidden sm:block">
+        <i data-lucide="search" class="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400"></i>
+        <input type="text" id="global-search-input" placeholder="Quick search title, author, or ISBN... (Press Enter)"
+               class="w-full bg-slate-100/80 text-sm pl-10 pr-4 py-2 rounded-xl border border-transparent focus:border-indigo-500 focus:bg-white focus:outline-none transition-all">
+      </div>
+
+      <!-- Header Action Buttons -->
+      <div class="flex items-center space-x-3">
+        <button onclick="App.openIssueBookModal()" 
+                class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold shadow-md shadow-indigo-600/20 flex items-center space-x-2 transition-all">
+          <i data-lucide="send" class="w-4 h-4"></i>
+          <span>Issue Book</span>
+        </button>
+
+        <button onclick="App.openAddBookModal()" 
+                class="px-4 py-2 bg-slate-900 hover:bg-slate-800 text-white rounded-xl text-xs font-bold shadow-sm flex items-center space-x-2 transition-all">
+          <i data-lucide="plus" class="w-4 h-4"></i>
+          <span>Add Book</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- Main Content Area Panels -->
+    <main class="flex-1 p-6 md:p-8 max-w-7xl mx-auto w-full">
+
+      <!-- ================= 1. VIEW: DASHBOARD ================= -->
+      <section id="view-dashboard" class="view-panel space-y-8">
+        <!-- Header Banner -->
+        <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+          <div>
+            <h2 class="text-2xl font-black text-slate-900 tracking-tight">Library Overview</h2>
+            <p class="text-sm text-slate-500 mt-1">Real-time status of catalog, member subscriptions, and circulation circulation.</p>
+          </div>
+          <div class="flex space-x-2">
+            <button onclick="App.refreshData()" class="px-3 py-2 bg-white border border-slate-200 text-slate-700 rounded-xl text-xs font-bold hover:bg-slate-50 flex items-center space-x-1.5 shadow-sm transition-colors">
+              <i data-lucide="refresh-cw" class="w-3.5 h-3.5"></i>
+              <span>Refresh Metrics</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Metrics Cards Grid -->
+        <div id="dashboard-metrics" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-5">
+          <!-- Populated dynamically via Components.renderMetricCards -->
+        </div>
+
+        <!-- Dashboard Two-Column Section -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          <!-- Left: Recent Circulation Activity Stream (2 cols) -->
+          <div class="lg:col-span-2 glass-card rounded-2xl p-6 border border-slate-200 shadow-sm">
+            <div class="flex items-center justify-between mb-4">
+              <div class="flex items-center space-x-2">
+                <i data-lucide="clock" class="w-5 h-5 text-indigo-600"></i>
+                <h3 class="font-bold text-slate-800 text-base">Recent Loan Activities</h3>
+              </div>
+              <button onclick="App.navigateTo('circulation')" class="text-xs font-bold text-indigo-600 hover:text-indigo-800">
+                View All Loans →
+              </button>
+            </div>
+            <div id="dashboard-recent-activity">
+              <!-- Populated dynamically -->
+            </div>
+          </div>
+
+          <!-- Right: Category Breakdown (1 col) -->
+          <div class="glass-card rounded-2xl p-6 border border-slate-200 shadow-sm">
+            <div class="flex items-center space-x-2 mb-4">
+              <i data-lucide="pie-chart" class="w-5 h-5 text-indigo-600"></i>
+              <h3 class="font-bold text-slate-800 text-base">Books by Category</h3>
+            </div>
+            <div id="dashboard-categories">
+              <!-- Populated dynamically -->
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ================= 2. VIEW: BOOKS ================= -->
+      <section id="view-books" class="view-panel hidden space-y-6">
+        <!-- Header -->
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div>
+            <h2 class="text-2xl font-black text-slate-900 tracking-tight">Books Catalog</h2>
+            <p class="text-sm text-slate-500 mt-1">Browse, filter, edit, and issue titles from the collection.</p>
+          </div>
+          <button onclick="App.openAddBookModal()" class="px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-sm font-bold shadow-md shadow-indigo-600/20 flex items-center space-x-2 transition-all self-start sm:self-auto">
+            <i data-lucide="plus-circle" class="w-4 h-4"></i>
+            <span>Add New Book</span>
+          </button>
+        </div>
+
+        <!-- Controls Bar -->
+        <div class="glass-card p-4 rounded-2xl border border-slate-200 flex flex-col md:flex-row gap-3 items-center justify-between">
+          <div class="w-full md:w-80 relative">
+            <i data-lucide="search" class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"></i>
+            <input type="text" id="book-search-input" placeholder="Search title, author, or ISBN..."
+                   class="w-full bg-slate-50 text-sm pl-9 pr-4 py-2 rounded-xl border border-slate-200 focus:outline-none focus:border-indigo-500 focus:bg-white transition-all">
+          </div>
+
+          <div class="flex flex-wrap items-center gap-2.5 w-full md:w-auto">
+            <!-- Category Filter -->
+            <select id="book-filter-category" class="bg-slate-50 text-xs font-semibold px-3 py-2 rounded-xl border border-slate-200 focus:outline-none focus:border-indigo-500">
+              <option value="All">All Categories</option>
+            </select>
+
+            <!-- Availability Filter -->
+            <select id="book-filter-availability" class="bg-slate-50 text-xs font-semibold px-3 py-2 rounded-xl border border-slate-200 focus:outline-none focus:border-indigo-500">
+              <option value="all">All Availability</option>
+              <option value="available">Available in Stock</option>
+              <option value="out_of_stock">Out of Stock</option>
+            </select>
+
+            <!-- View Toggle -->
+            <div class="flex bg-slate-100 p-1 rounded-xl border border-slate-200">
+              <button id="btn-view-grid" title="Grid View" class="p-1.5 rounded-lg bg-indigo-600 text-white transition-colors">
+                <i data-lucide="layout-grid" class="w-4 h-4"></i>
+              </button>
+              <button id="btn-view-table" title="Table View" class="p-1.5 rounded-lg bg-white text-slate-600 transition-colors ml-1">
+                <i data-lucide="list" class="w-4 h-4"></i>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Books Container -->
+        <div id="books-container" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          <!-- Populated dynamically via Components.renderBookGrid / renderBookTable -->
+        </div>
+      </section>
+
+      <!-- ================= 3. VIEW: MEMBERS ================= -->
+      <section id="view-members" class="view-panel hidden space-y-6">
+        <!-- Header -->
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div>
+            <h2 class="text-2xl font-black text-slate-900 tracking-tight">Members Directory</h2>
+            <p class="text-sm text-slate-500 mt-1">Manage registered faculty, students, and readers.</p>
+          </div>
+          <button onclick="App.openAddMemberModal()" class="px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-sm font-bold shadow-md shadow-indigo-600/20 flex items-center space-x-2 transition-all self-start sm:self-auto">
+            <i data-lucide="user-plus" class="w-4 h-4"></i>
+            <span>Register Member</span>
+          </button>
+        </div>
+
+        <!-- Controls Bar -->
+        <div class="glass-card p-4 rounded-2xl border border-slate-200 flex flex-col md:flex-row gap-3 items-center justify-between">
+          <div class="w-full md:w-80 relative">
+            <i data-lucide="search" class="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"></i>
+            <input type="text" id="member-search-input" placeholder="Search name, email, or member code..."
+                   class="w-full bg-slate-50 text-sm pl-9 pr-4 py-2 rounded-xl border border-slate-200 focus:outline-none focus:border-indigo-500 focus:bg-white transition-all">
+          </div>
+
+          <div class="flex items-center gap-2.5 w-full md:w-auto">
+            <select id="member-filter-type" class="bg-slate-50 text-xs font-semibold px-3 py-2 rounded-xl border border-slate-200 focus:outline-none focus:border-indigo-500">
+              <option value="All">All Membership Tiers</option>
+              <option value="Faculty">Faculty (10 Books)</option>
+              <option value="Student">Student (4 Books)</option>
+              <option value="Premium">Premium (6 Books)</option>
+              <option value="Standard">Standard (3 Books)</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Members Grid -->
+        <div id="members-container" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+          <!-- Populated dynamically via Components.renderMemberCards -->
+        </div>
+      </section>
+
+      <!-- ================= 4. VIEW: CIRCULATION ================= -->
+      <section id="view-circulation" class="view-panel hidden space-y-6">
+        <!-- Header -->
+        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div>
+            <h2 class="text-2xl font-black text-slate-900 tracking-tight">Circulation & Loan History</h2>
+            <p class="text-sm text-slate-500 mt-1">Track active issues, manage returns, renew loans, and record overdue fines.</p>
+          </div>
+          <button onclick="App.openIssueBookModal()" class="px-4 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-sm font-bold shadow-md shadow-indigo-600/20 flex items-center space-x-2 transition-all self-start sm:self-auto">
+            <i data-lucide="send" class="w-4 h-4"></i>
+            <span>Issue New Book</span>
+          </button>
+        </div>
+
+        <!-- Filter Status Tabs -->
+        <div class="flex space-x-2 border-b border-slate-200 pb-3">
+          <button data-status="All" class="loan-status-btn px-4 py-2 rounded-xl text-xs font-bold transition-all bg-indigo-600 text-white shadow-sm">
+            All Records
+          </button>
+          <button data-status="Active" class="loan-status-btn px-4 py-2 rounded-xl text-xs font-bold transition-all bg-white text-slate-600 border border-slate-200 hover:bg-slate-50">
+            Active Loans
+          </button>
+          <button data-status="Overdue" class="loan-status-btn px-4 py-2 rounded-xl text-xs font-bold transition-all bg-white text-slate-600 border border-slate-200 hover:bg-slate-50">
+            Overdue Loans
+          </button>
+          <button data-status="Returned" class="loan-status-btn px-4 py-2 rounded-xl text-xs font-bold transition-all bg-white text-slate-600 border border-slate-200 hover:bg-slate-50">
+            Returned
+          </button>
+        </div>
+
+        <!-- Loans Table Container -->
+        <div id="loans-container">
+          <!-- Populated dynamically via Components.renderLoansTable -->
+        </div>
+      </section>
+
+      <!-- ================= 5. VIEW: REPORTS & EXPORT ================= -->
+      <section id="view-reports" class="view-panel hidden space-y-6">
+        <div>
+          <h2 class="text-2xl font-black text-slate-900 tracking-tight">Analytics & Data Export</h2>
+          <p class="text-sm text-slate-500 mt-1">Download complete library datasets and inspect usage rankings.</p>
+        </div>
+
+        <div id="reports-container">
+          <!-- Populated dynamically via Components.renderReportsView -->
+        </div>
+      </section>
+
+      <!-- ================= 6. VIEW: SETTINGS ================= -->
+      <section id="view-settings" class="view-panel hidden space-y-8">
+        <div>
+          <h2 class="text-2xl font-black text-slate-900 tracking-tight">System Diagnostic & Settings</h2>
+          <p class="text-sm text-slate-500 mt-1">Environment specifications and database administrative controls.</p>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <!-- Diagnostic card -->
+          <div class="glass-card p-6 rounded-2xl border border-slate-200 shadow-sm">
+            <h3 class="text-base font-bold text-slate-800 mb-4 flex items-center space-x-2">
+              <i data-lucide="cpu" class="w-5 h-5 text-indigo-600"></i>
+              <span>System Information</span>
+            </h3>
+            <div id="settings-info">
+              <!-- Populated dynamically -->
+            </div>
+          </div>
+
+          <!-- Reset database card -->
+          <div class="glass-card p-6 rounded-2xl border border-slate-200 shadow-sm flex flex-col justify-between">
+            <div>
+              <h3 class="text-base font-bold text-slate-800 mb-2 flex items-center space-x-2">
+                <i data-lucide="database" class="w-5 h-5 text-rose-600"></i>
+                <span>Database Administration</span>
+              </h3>
+              <p class="text-xs text-slate-500 leading-relaxed mb-4">
+                Need to refresh sample data for a demo or start fresh? Resetting the database will re-run the schema initialization and seed the catalog with 20 real books, 8 active members, and initial loan records.
+              </p>
+            </div>
+            <button onclick="App.confirmResetDatabase()" class="px-4 py-2.5 bg-rose-50 text-rose-700 hover:bg-rose-100 border border-rose-200 rounded-xl text-xs font-bold flex items-center justify-center space-x-2 transition-all">
+              <i data-lucide="rotate-ccw" class="w-4 h-4"></i>
+              <span>Reset & Re-seed Database</span>
+            </button>
+          </div>
+        </div>
+      </section>
+
+    </main>
+  </div>
+
+  <!-- ==================== MODALS ==================== -->
+
+  <!-- Modal 1: Issue Book -->
+  <div id="modal-issue-book" class="modal-backdrop fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="modal-content glass-card bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl border border-slate-200">
+      <div class="flex items-center justify-between pb-4 border-b border-slate-100">
+        <h3 class="text-lg font-bold text-slate-800 flex items-center space-x-2">
+          <i data-lucide="send" class="w-5 h-5 text-indigo-600"></i>
+          <span>Issue Book to Member</span>
+        </h3>
+        <button class="modal-close-btn p-1.5 text-slate-400 hover:text-slate-600 rounded-xl">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+      <form id="form-issue" class="space-y-4 pt-4">
+        <div>
+          <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Select Book *</label>
+          <select id="issue-book-select" required class="w-full text-sm bg-slate-50 border border-slate-200 rounded-xl p-2.5 focus:border-indigo-500 focus:bg-white focus:outline-none">
+            <!-- Populated dynamically -->
+          </select>
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Borrower Member *</label>
+          <select id="issue-member-select" required class="w-full text-sm bg-slate-50 border border-slate-200 rounded-xl p-2.5 focus:border-indigo-500 focus:bg-white focus:outline-none">
+            <!-- Populated dynamically -->
+          </select>
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Loan Duration (Days)</label>
+          <select id="issue-duration" class="w-full text-sm bg-slate-50 border border-slate-200 rounded-xl p-2.5 focus:border-indigo-500 focus:bg-white focus:outline-none">
+            <option value="7">7 Days (1 Week)</option>
+            <option value="14" selected>14 Days (2 Weeks - Standard)</option>
+            <option value="21">21 Days (3 Weeks)</option>
+            <option value="30">30 Days (1 Month)</option>
+          </select>
+        </div>
+
+        <div>
+          <label class="block text-xs font-bold text-slate-700 uppercase tracking-wider mb-1">Issue Notes (Optional)</label>
+          <input type="text" id="issue-notes" placeholder="e.g. Research project reference..."
+                 class="w-full text-sm bg-slate-50 border border-slate-200 rounded-xl p-2.5 focus:border-indigo-500 focus:bg-white focus:outline-none">
+        </div>
+
+        <div class="flex justify-end space-x-2 pt-3 border-t border-slate-100">
+          <button type="button" class="modal-close-btn px-4 py-2 border border-slate-200 text-slate-600 rounded-xl text-xs font-bold hover:bg-slate-50">
+            Cancel
+          </button>
+          <button type="submit" class="px-5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl text-xs font-bold shadow-md shadow-indigo-600/20">
+            Confirm Issue
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal 2: Return Book & Fine Settlement -->
+  <div id="modal-return-book" class="modal-backdrop fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="modal-content glass-card bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-slate-200">
+      <div class="flex items-center justify-between pb-4 border-b border-slate-100">
+        <h3 class="text-lg font-bold text-slate-800 flex items-center space-x-2">
+          <i data-lucide="check-circle-2" class="w-5 h-5 text-emerald-600"></i>
+          <span>Process Book Return</span>
+        </h3>
+        <button class="modal-close-btn p-1.5 text-slate-400 hover:text-slate-600 rounded-xl">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+      <div class="space-y-4 pt-4 text-sm">
+        <div class="bg-slate-50 p-4 rounded-2xl border border-slate-100 space-y-2 text-xs">
+          <div class="flex justify-between">
+            <span class="text-slate-400">Book:</span>
+            <span id="return-book-title" class="font-bold text-slate-800 text-right"></span>
+          </div>
+          <div class="flex justify-between">
+            <span class="text-slate-400">Borrower:</span>
+            <span id="return-member-name" class="font-semibold text-slate-700"></span>
+          </div>
+          <div class="flex justify-between">
+            <span class="text-slate-400">Due Date:</span>
+            <span id="return-due-date" class="font-semibold text-slate-700"></span>
+          </div>
+        </div>
+
+        <!-- Overdue & Fine Alert Section -->
+        <div id="return-fine-details" class="p-4 rounded-2xl bg-rose-50 border border-rose-200 text-rose-800 space-y-2 hidden">
+          <div class="flex items-center space-x-2 font-bold text-xs">
+            <i data-lucide="alert-triangle" class="w-4 h-4 text-rose-600"></i>
+            <span>This book is overdue!</span>
+          </div>
+          <div class="flex justify-between text-xs">
+            <span>Overdue Duration:</span>
+            <span id="return-overdue-days" class="font-bold"></span>
+          </div>
+          <div class="flex justify-between text-xs">
+            <span>Calculated Fine ($1.00/day):</span>
+            <span id="return-fine-amount" class="text-sm font-extrabold text-rose-700"></span>
+          </div>
+          <label class="flex items-center space-x-2 pt-2 border-t border-rose-200 text-xs font-semibold cursor-pointer">
+            <input type="checkbox" id="return-fine-paid-checkbox" class="rounded text-rose-600 focus:ring-rose-500">
+            <span>Mark fine as paid upon return</span>
+          </label>
+        </div>
+
+        <div class="flex justify-end space-x-2 pt-3 border-t border-slate-100">
+          <button type="button" class="modal-close-btn px-4 py-2 border border-slate-200 text-slate-600 rounded-xl text-xs font-bold hover:bg-slate-50">
+            Cancel
+          </button>
+          <button id="btn-confirm-return" type="button" class="px-5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold shadow-md">
+            Complete Return
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal 3: Add / Edit Book -->
+  <div id="modal-book" class="modal-backdrop fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="modal-content glass-card bg-white rounded-3xl max-w-2xl w-full p-6 shadow-2xl border border-slate-200 max-h-[90vh] overflow-y-auto">
+      <div class="flex items-center justify-between pb-4 border-b border-slate-100">
+        <h3 id="modal-book-title" class="text-lg font-bold text-slate-800">Add New Book</h3>
+        <button class="modal-close-btn p-1.5 text-slate-400 hover:text-slate-600 rounded-xl">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+      <form id="form-book" class="space-y-4 pt-4 text-xs">
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div class="sm:col-span-2">
+            <label class="block font-bold text-slate-700 uppercase mb-1">Book Title *</label>
+            <input type="text" id="book-title" required class="w-full text-sm bg-slate-50 border border-slate-200 rounded-xl p-2.5 focus:border-indigo-500 focus:bg-white focus:outline-none">
+          </div>
+
+          <div>
+            <label class="block font-bold text-slate-700 uppercase mb-1">Author(s) *</label>
+            <input type="text" id="book-author" required class="w-full text-sm bg-slate-50 border border-slate-200 rounded-xl p-2.5 focus:border-indigo-500 focus:bg-white focus:outline-none">
+          </div>
+
+          <div>
+            <label class="block font-bold text-slate-700 uppercase mb-1">ISBN Number *</label>
+            <input type="text" id="book-isbn" required placeholder="e.g. 978-0132350884" class="w-full text-sm font-mono bg-slate-50 border border-slate-200 rounded-xl p-2.5 focus:border-indigo-500 focus:bg-white focus:outline-none">
+          </div>
+
+          <div>
+            <label class="block font-bold text-slate-700 uppercase mb-1">Category / Genre *</label>
+            <input type="text" id="book-category" required list="categories-list" placeholder="e.g. Computer Science, Science" class="w-full text-sm bg-slate-50 border border-slate-200 rounded-xl p-2.5 focus:border-indigo-500 focus:bg-white focus:outline-none">
+            <datalist id="categories-list">
+              <option value="Computer Science">
+              <option value="Science">
+              <option value="Literature & Fiction">
+              <option value="History">
+              <option value="Philosophy">
+              <option value="Business & Economics">
+              <option value="Self-Help">
+              <option value="Psychology">
+            </datalist>
+          </div>
+
+          <div>
+            <label class="block font-bold text-slate-700 uppercase mb-1">Total Copies in Stock *</label>
+            <input type="number" id="book-copies" required min="1" value="3" class="w-full text-sm bg-slate-50 border border-slate-200 rounded-xl p-2.5 focus:border-indigo-500 focus:bg-white focus:outline-none">
+          </div>
+
+          <div>
+            <label class="block font-bold text-slate-700 uppercase mb-1">Publication Year</label>
+            <input type="number" id="book-year" placeholder="e.g. 2024" class="w-full text-sm bg-slate-50 border border-slate-200 rounded-xl p-2.5 focus:border-indigo-500 focus:bg-white focus:outline-none">
+          </div>
+
+          <div>
+            <label class="block font-bold text-slate-700 uppercase mb-1">Publisher</label>
+            <input type="text" id="book-publisher" placeholder="e.g. MIT Press" class="w-full text-sm bg-slate-50 border border-slate-200 rounded-xl p-2.5 focus:border-indigo-500 focus:bg-white focus:outline-none">
+          </div>
+
+          <div>
+            <label class="block font-bold text-slate-700 uppercase mb-1">Shelf Location</label>
+            <input type="text" id="book-shelf" placeholder="e.g. CS-B2-04" class="w-full text-sm bg-slate-50 border border-slate-200 rounded-xl p-2.5 focus:border-indigo-500 focus:bg-white focus:outline-none">
+          </div>
+
+          <div>
+            <label class="block font-bold text-slate-700 uppercase mb-1">Cover Image URL</label>
+            <input type="url" id="book-cover" placeholder="https://..." class="w-full text-sm bg-slate-50 border border-slate-200 rounded-xl p-2.5 focus:border-indigo-500 focus:bg-white focus:outline-none">
+          </div>
+
+          <div class="sm:col-span-2">
+            <label class="block font-bold text-slate-700 uppercase mb-1">Description / Summary</label>
+            <textarea id="book-desc" rows="3" class="w-full text-sm bg-slate-50 border border-slate-200 rounded-xl p-2.5 focus:border-indigo-500 focus:bg-white focus:outline-none"></textarea>
+          </div>
+        </div>
+
+        <!-- Cover preview -->
+        <div class="flex items-center space-x-3 p-3 bg-slate-50 rounded-xl border border-slate-100">
+          <img id="book-cover-preview" src="https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?w=100" class="w-10 h-14 rounded object-cover shadow-sm bg-white" alt="Preview">
+          <div>
+            <span class="font-bold text-slate-700 text-xs">Live Cover Preview</span>
+            <p class="text-[11px] text-slate-400">URL preview will refresh as you type.</p>
+          </div>
+        </div>
+
+        <div class="flex justify-end space-x-2 pt-3 border-t border-slate-100">
+          <button type="button" class="modal-close-btn px-4 py-2 border border-slate-200 text-slate-600 rounded-xl font-bold hover:bg-slate-50">
+            Cancel
+          </button>
+          <button type="submit" class="px-5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold shadow-md shadow-indigo-600/20">
+            Save Book
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal 4: Add / Edit Member -->
+  <div id="modal-member" class="modal-backdrop fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="modal-content glass-card bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl border border-slate-200">
+      <div class="flex items-center justify-between pb-4 border-b border-slate-100">
+        <h3 id="modal-member-title" class="text-lg font-bold text-slate-800">Register Member</h3>
+        <button class="modal-close-btn p-1.5 text-slate-400 hover:text-slate-600 rounded-xl">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+      <form id="form-member" class="space-y-4 pt-4 text-xs">
+        <div>
+          <label class="block font-bold text-slate-700 uppercase mb-1">Full Name *</label>
+          <input type="text" id="member-name" required class="w-full text-sm bg-slate-50 border border-slate-200 rounded-xl p-2.5 focus:border-indigo-500 focus:bg-white focus:outline-none">
+        </div>
+
+        <div>
+          <label class="block font-bold text-slate-700 uppercase mb-1">Email Address *</label>
+          <input type="email" id="member-email" required class="w-full text-sm bg-slate-50 border border-slate-200 rounded-xl p-2.5 focus:border-indigo-500 focus:bg-white focus:outline-none">
+        </div>
+
+        <div>
+          <label class="block font-bold text-slate-700 uppercase mb-1">Phone Number</label>
+          <input type="text" id="member-phone" placeholder="+1 (555) 000-0000" class="w-full text-sm bg-slate-50 border border-slate-200 rounded-xl p-2.5 focus:border-indigo-500 focus:bg-white focus:outline-none">
+        </div>
+
+        <div class="grid grid-cols-2 gap-4">
+          <div>
+            <label class="block font-bold text-slate-700 uppercase mb-1">Membership Tier</label>
+            <select id="member-type" class="w-full text-sm bg-slate-50 border border-slate-200 rounded-xl p-2.5 focus:border-indigo-500 focus:bg-white focus:outline-none">
+              <option value="Standard">Standard</option>
+              <option value="Student">Student</option>
+              <option value="Premium">Premium</option>
+              <option value="Faculty">Faculty</option>
+            </select>
+          </div>
+
+          <div>
+            <label class="block font-bold text-slate-700 uppercase mb-1">Max Borrow Limit</label>
+            <input type="number" id="member-limit" min="1" max="20" value="3" class="w-full text-sm bg-slate-50 border border-slate-200 rounded-xl p-2.5 focus:border-indigo-500 focus:bg-white focus:outline-none">
+          </div>
+        </div>
+
+        <div id="member-status-group" class="hidden">
+          <label class="block font-bold text-slate-700 uppercase mb-1">Account Status</label>
+          <select id="member-status" class="w-full text-sm bg-slate-50 border border-slate-200 rounded-xl p-2.5 focus:border-indigo-500 focus:bg-white focus:outline-none">
+            <option value="Active">Active</option>
+            <option value="Suspended">Suspended</option>
+          </select>
+        </div>
+
+        <div class="flex justify-end space-x-2 pt-3 border-t border-slate-100">
+          <button type="button" class="modal-close-btn px-4 py-2 border border-slate-200 text-slate-600 rounded-xl font-bold hover:bg-slate-50">
+            Cancel
+          </button>
+          <button type="submit" class="px-5 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-bold shadow-md">
+            Save Member
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Modal 5: Member History -->
+  <div id="modal-member-history" class="modal-backdrop fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="modal-content glass-card bg-white rounded-3xl max-w-xl w-full p-6 shadow-2xl border border-slate-200 max-h-[85vh] flex flex-col">
+      <div class="flex items-center justify-between pb-4 border-b border-slate-100">
+        <div>
+          <h3 id="history-member-name" class="text-lg font-bold text-slate-800"></h3>
+          <p id="history-member-meta" class="text-xs text-slate-400 mt-0.5"></p>
+        </div>
+        <button class="modal-close-btn p-1.5 text-slate-400 hover:text-slate-600 rounded-xl">
+          <i data-lucide="x" class="w-5 h-5"></i>
+        </button>
+      </div>
+
+      <div class="flex-1 overflow-y-auto pt-4 space-y-3" id="history-loans-list">
+        <!-- Populated dynamically -->
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== TOAST NOTIFICATIONS CONTAINER ==================== -->
+  <div id="toast-container" class="fixed bottom-6 right-6 z-50 flex flex-col space-y-2 pointer-events-none">
+    <!-- Toasts injected here -->
+  </div>
+
+  <!-- Application Scripts -->
+  <script src="/js/components.js"></script>
+  <script src="/js/app.js"></script>
+</body>
+</html>
